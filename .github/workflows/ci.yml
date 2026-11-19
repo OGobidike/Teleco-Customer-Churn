@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      neural_net:
+        description: "Also run the TensorFlow tests (downloads about 600 MB)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Lint, test and reproduce the results
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+          enable-cache: true
+
+      - name: Install (locked versions, no TensorFlow)
+        run: uv sync --locked --extra serve --extra figures
+
+      - name: Lint
+        run: uv run ruff check .
+
+      - name: Tests
+        run: uv run pytest -m "not nn"
+
+      - name: Reproduce the committed scores
+        # Retrains the three scikit-learn models from the pinned data and fails if
+        # their PR-AUC, ROC-AUC or Brier score on the test rows has moved by more
+        # than 0.005 from results/metrics.json, or if a different model wins.
+        run: uv run churn check
+
+  neural-net:
+    name: TensorFlow tests (on request)
+    if: github.event_name == 'workflow_dispatch' && inputs.neural_net
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.12"
+          enable-cache: true
+      - run: uv sync --locked --all-extras
+      - run: uv run pytest -m nn

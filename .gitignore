@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Data is downloaded and checked by its fingerprint, never committed
+data/
+
+# Trained models are rebuilt by `churn train`
+models/
+
+# A quick run without the neural network keeps its results apart from the committed ones
+results/sklearn-only/
+
+# Notebook and editor leftovers
+.ipynb_checkpoints/
+.vscode/
+.DS_Store

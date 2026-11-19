@@ -1,0 +1,65 @@
+[project]
+name = "telco-churn"
+version = "2.0.0"
+description = "Telecom customer churn: a leak-proof pipeline, an honest evaluation, an audit of my 2025 model, and a served API."
+readme = "README.md"
+license = "MIT"
+authors = [{ name = "Francis (Oguguamakwa) Obidike" }]
+requires-python = ">=3.12,<3.13"
+dependencies = [
+    "numpy>=2.1",
+    "pandas>=2.2",
+    "scikit-learn>=1.6",
+    "scipy>=1.14",
+    "skops>=0.11",
+]
+
+[project.optional-dependencies]
+# The neural network (a rebuilt version of the 2025 model) and the audit that replays it.
+nn = [
+    "tensorflow>=2.18",
+    "keras>=3.6",
+    "imbalanced-learn>=0.13",
+]
+# The prediction API.
+serve = [
+    "fastapi>=0.115",
+    "uvicorn>=0.32",
+]
+# The charts in the README.
+figures = [
+    "matplotlib>=3.9",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "ruff>=0.8",
+    "httpx2>=2.16",
+]
+
+[project.scripts]
+churn = "churn.cli:main"
+
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/churn"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+# The 2025 notebook is kept byte for byte as it was; never lint or reformat it.
+extend-exclude = ["notebooks"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM", "NPY"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "nn: needs TensorFlow (the nn extra)",
+    "network: downloads the dataset",
+]
